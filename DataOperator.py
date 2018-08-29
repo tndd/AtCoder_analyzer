@@ -14,6 +14,8 @@ class DataOperator:
     self.user_cur = self.connect_db()
     # userテーブルの作成
     self.create_user_tbl()
+    # 順位表テーブルの作成
+    self.create_turn_table()
   
   # jsonファイルの読み込み
   def read_json(self, num):
@@ -25,9 +27,9 @@ class DataOperator:
   def connect_db(self):
     return sqlite3.connect('{}/{}'.format(self.db_path, self.dbname)).cursor()
   
-  # テーブルの作成
+  # userテーブルの作成
   def create_user_tbl(self):
-    sql_createdb = """
+    sql_create_user_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
         uname text,
@@ -37,7 +39,20 @@ class DataOperator:
         rating int,
         competitions int
       );""".format(self.user_tbl_name)
-    self.user_cur.execute(sql_createdb)
-
+    self.user_cur.execute(sql_create_user_tbl)
+  
+  # turn_tblの作成
+  def create_turn_tbl(self):
+    sql_create_turn_tbl = """
+          CREATE TABLE IF NOT EXISTS {}(
+            id int primary key,
+            contest_id int,
+            rank int,
+            score int,
+            time int,
+            penalty int,
+            failure int
+          );""".format(self.user_tbl_name)
+    self.user_cur.execute(sql_create_turn_tbl)
 
 a = DataOperator()
