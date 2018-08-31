@@ -44,15 +44,15 @@ class DataOperator:
   # turn_tblの作成
   def create_turn_tbl(self):
     sql_create_turn_tbl = """
-          CREATE TABLE IF NOT EXISTS {}(
-            id int primary key,
-            contest_id int,
-            rank int,
-            score int,
-            time int,
-            penalty int,
-            failure int
-          );""".format(self.user_tbl_name)
+      CREATE TABLE IF NOT EXISTS {}(
+        id int primary key,
+        contest_id int,
+        rank int,
+        score int,
+        time int,
+        penalty int,
+        failure int
+      );""".format(self.user_tbl_name)
     self.user_cur.execute(sql_create_turn_tbl)
 
 a = DataOperator()
