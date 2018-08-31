@@ -9,7 +9,10 @@ class DataOperator:
     self.abc_path = 'data/abc'
     self.db_path = 'data'
     self.dbname = 'lacerta.db'
-    self.user_tbl_name = 'user_tbl'
+    # テーブル名
+    self.user_tbl_name = 'user'
+    self.turn_tbl_name = 'turn'
+    self.user_problem_tbl_name = 'user_problem'
     # カーソルの設定
     self.user_cur = self.connect_db()
     # userテーブルの作成
@@ -32,8 +35,8 @@ class DataOperator:
     sql_create_user_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
-        uname text,
-        uname_screen text,
+        user_name text,
+        user_name_screen text,
         twitter_id text,
         coutry text,
         rating int,
@@ -47,12 +50,29 @@ class DataOperator:
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
         contest_id int,
+        user_id int,
         rank int,
         score int,
         time int,
         penalty int,
         failure int
-      );""".format(self.user_tbl_name)
+      );""".format(self.turn_tbl_name)
     self.user_cur.execute(sql_create_turn_tbl)
+
+  # turn_tblの作成
+  def create_user_problem_tbl(self):
+    sql_create_user_problem_tbl = """
+      CREATE TABLE IF NOT EXISTS {}(
+        id int primary key,
+        turn_id int,
+        type text,
+        score int,
+        failure int
+        time int,
+        penalty int,
+      );""".format(self.user_problem_tbl_name)
+    self.user_cur.execute(sql_create_user_problem_tbl)
+  
+
 
 a = DataOperator()
