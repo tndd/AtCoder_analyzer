@@ -1,41 +1,73 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import json
+import sys
 
 
 class DataOperator:
-  def __init__(self):
+  # 番号のファイルで初期化される
+  def __init__(self, num):
     # 定数の設定
-    self.abc_path = 'data/abc'
-    self.db_path = 'data'
-    self.dbname = 'lacerta.db'
-    # テーブル名定義
-    self.contest_tbl_name = 'contest'
-    self.problem_tbl_name = 'problem'
-    self.ac_tbl_name = 'ac'
-    self.avg_tbl_name = 'avg'
-    self.fail_tbl_name = 'fail'
-    # カーソル作成
-    self.cursor = self.connect_db()
+    self.__set_const()
+    # jsonファイルを読み込み
+    self.__src_dict = self.__load_json(num)
+    # racelta.dbに接続
+    self.__cursor_racerta = self.__connect_db()
     # テーブルの作成
-    self.create_contest_tbl()
-    self.create_problem_tbl()
-    self.create_ac_tbl()
-    self.create_avg_tbl()
-    self.create_fail_tbl()
+    self.__create_tbls()
+  
+  # 定数の設定
+  def __set_const(self):
+    # 大会データソースのパス
+    self.__ABC_PATH = 'data/abc'
+    # dbの保存先パス
+    self.__DB_PATH = 'data'
+    # dbの名前
+    self.__DB_NAME = 'lacerta.db'
+    # テーブル名定義
+    self.__CONTEST_TBL_NAME = 'contest'
+    self.__PROBLEM_TBL_NAME = 'problem'
+    self.__AC_TBL_NAME = 'ac'
+    self.__AVG_TBL_NAME = 'avg'
+    self.__FAIL_TBL_NAME = 'fail'
+    ## ステータスコード
+    # 正常終了の時に返す値
+    self.__SUCCESS = 0
+    # 異常終了の時に返すコード
+    self.__FAILED = 1
+    return self.__SUCCESS
+  
+  # テーブルの作成
+  def __create_tbls(self):
+    # 大会テーブル
+    self.__create_contest_tbl()
+    # 問題テーブル
+    self.__create_problem_tbl()
+    # ac率テーブル
+    self.__create_ac_tbl()
+    # 平均回答時間テーブル
+    self.__create_avg_tbl()
+    # 失敗数テーブル
+    self.__create_fail_tbl()
+    return self.__SUCCESS
   
   # jsonファイルの読み込み
-  def read_json(self, num):
-    with open('{}/{}.json'.format(self.abc_path, '%03d' % num), 'r', encoding='utf-8') as f:
-      json_dict = json.load(f)
-    return json_dict
+  def __load_json(self, num):
+    try:
+      with open('{}/{}.json'.format(self.__ABC_PATH, '%03d' % num), 'r', encoding='utf-8') as f:
+        json_dict = json.load(f)
+      return json_dict
+    # 存在しないファイルを選択した場合、プログラムを強制終了
+    except:
+      sys.stderr.write('jsonファイルの読み込みに失敗')
+      exit(self.__FAILED)
   
   # dbへの接続
-  def connect_db(self):
-    return sqlite3.connect('{}/{}'.format(self.db_path, self.dbname)).cursor()
+  def __connect_db(self):
+    return sqlite3.connect('{}/{}'.format(self.__DB_PATH, self.__DB_NAME)).cursor()
   
   # 大会テーブルの作成
-  def create_contest_tbl(self):
+  def __create_contest_tbl(self):
     sql_create_user_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
@@ -44,23 +76,24 @@ class DataOperator:
         b_id int,
         c_id int,
         d_id int
-      );""".format(self.contest_tbl_name)
-    self.cursor.execute(sql_create_user_tbl)
-
+      );""".format(self.__CONTEST_TBL_NAME)
+    self.__cursor_racerta.execute(sql_create_user_tbl)
+    return self.__SUCCESS
+  
   # 問題テーブルの作成
-  def create_problem_tbl(self):
+  def __create_problem_tbl(self):
     sql_create_problem_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
-        name text,
         ac_id int,
         avg_id int,
         fail_id int
-      );""".format(self.problem_tbl_name)
-    self.cursor.execute(sql_create_problem_tbl)
+      );""".format(self.__PROBLEM_TBL_NAME)
+    self.__cursor_racerta.execute(sql_create_problem_tbl)
+    return self.__SUCCESS
   
   # ac率テーブルの作成
-  def create_ac_tbl(self):
+  def __create_ac_tbl(self):
     sql_create_ac_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
@@ -73,11 +106,12 @@ class DataOperator:
         rate_yellow real,
         rate_orange real,
         rate_red real
-      );""".format(self.ac_tbl_name)
-    self.cursor.execute(sql_create_ac_tbl)
-
+      );""".format(self.__AC_TBL_NAME)
+    self.__cursor_racerta.execute(sql_create_ac_tbl)
+    return self.__SUCCESS
+  
   # 平均回答時間テーブルの作成
-  def create_avg_tbl(self):
+  def __create_avg_tbl(self):
     sql_create_avg_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
@@ -90,11 +124,12 @@ class DataOperator:
         time_yellow int,
         time_orange int,
         time_red int
-      );""".format(self.avg_tbl_name)
-    self.cursor.execute(sql_create_avg_tbl)
-
+      );""".format(self.__AVG_TBL_NAME)
+    self.__cursor_racerta.execute(sql_create_avg_tbl)
+    return self.__SUCCESS
+  
   # 平均失敗数テーブルの作成
-  def create_fail_tbl(self):
+  def __create_fail_tbl(self):
     sql_create_fail_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
         id int primary key,
@@ -107,8 +142,9 @@ class DataOperator:
         fail_yellow int,
         fail_orange int,
         fail_red int
-      );""".format(self.fail_tbl_name)
-    self.cursor.execute(sql_create_fail_tbl)
+      );""".format(self.__FAIL_TBL_NAME)
+    self.__cursor_racerta.execute(sql_create_fail_tbl)
+    return self.__SUCCESS
 
 
-a = DataOperator()
+a = DataOperator(106)
