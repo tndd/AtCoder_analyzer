@@ -42,7 +42,7 @@ class Scraper:
     print('abc{}\tdone'.format('%03d' % num))
   
   # ループして情報を取得
-  def scalpe_abc_loop(self, end, start = 1):
+  def scalpe_abc_loop(self, end, start=1):
     for i in range(start, end):
       i_str = '%03d' % i
       self.scalpe_abc(i_str)

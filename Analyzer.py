@@ -125,7 +125,6 @@ class Analyzer:
     elif rate < 2800:
       return 'orange'
     else:
-      print(rate)
       return 'red'
   
   # 統計情報を辞書データ(参加者、問題)に登録
@@ -171,9 +170,9 @@ class Analyzer:
     return self.__SUCCESS
 
 if __name__ == '__main__':
-  a = Analyzer(107)
-  print(a.problem_dic)
   from DataOperator import DataOperator
   b = DataOperator()
-  # b.reg_db_part(a.problem_dic[0])
-  b.reg_db(a.problem_dic, 107)
+  for n in range(1,108):
+    a = Analyzer(n)
+    b.reg_db(a.problem_dic, n)
+    print(n)
