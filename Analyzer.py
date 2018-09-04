@@ -5,14 +5,29 @@ import sys
 
 class Analyzer:
   def __init__(self, num):
-    # 現在参照中のファイル番号
-    self.__now_num = num
-    # 読み込んだファイル辞書
+    # 定数ファイル定義
+    self.__set_const()
+    # 変数ファイルの設定
+    self.__set_val(num)
+    # 辞書に情報登録
+    self.reg_info2dict()
+
+  # 定数の設定
+  def __set_const(self):
+    self.JSON_PATH = 'data/abc'
+  
+  # 変数の設定
+  def __set_val(self, num):
+    # ファイル辞書の読み込み
     self.tgt_dict = self.file_loader(num)
+    # 参加者数の合計辞書の読み込み
+    self.participants_dict = self.gen_participants_dict()
+    # 問題の項目ごとの合計辞書リスト
+    self.problem_dic = [self.gen_problem_dict() for _ in range(4)]
   
   # 解析ファイルパスの生成
   def __get_path(self, num):
-    return 'data/abc/{}.json'.format('%03d' % num)
+    return '{}/{}.json'.format(self.JSON_PATH, '%03d' % num)
   
   # ファイル読み込み
   def __load_json(self, fpath):
@@ -26,10 +41,10 @@ class Analyzer:
   
   # jsonファイルを読み込むラッパーメソッド
   def file_loader(self, num):
-    self.__now_num = num
     fpath = self.__get_path(num)
     return self.__load_json(fpath)
   
+  # レート毎参加者数の辞書
   def gen_participants_dict(self):
     dic = {
       # 参加者数合計
@@ -44,10 +59,9 @@ class Analyzer:
     }
     return dic
   
-  # 問題合計情報
-  def gen_problem_dict(self, n):
+  # 問題毎のAC数、回答合計時間、失敗数
+  def gen_problem_dict(self):
     problem_dict = {
-      'type': n,
       # AC数合計
       'gray_ac': 0,
       'brown_ac': 0,
@@ -98,30 +112,22 @@ class Analyzer:
     else:
       return 'red'
   
-  # 問題合計情報の登録
-  def reg_problem_dict(self, tasks, prob_dic):
-    pass
-  # 参加者の
-  def load_infomations(self):
-    # 参加者数の合計
-    participants_dict = self.gen_participants_dict()
-    # 問題の項目ごとの合計
-    prob_dic = [self.gen_problem_dict(n) for n in range(4)]
+  
+  # 統計情報を辞書データ(参加者、問題)に登録
+  def reg_info2dict(self):
     # 人数毎にループ
     for d in self.tgt_dict['data']:
       # レート色を算出
       rate = self.rate2color(d)
       # 参加者集計
-      participants_dict[rate] += 1
-      # 問題毎にループ
+      self.participants_dict[rate] += 1
+      # 問題毎の情報集計
       i = 0
-      for t, pd in zip(d['tasks'], prob_dic):
+      for t, pd in zip(d['tasks'], self.problem_dic):
         if 'elapsed_time' in t:
           pd['{}_ac'.format(rate)] += 1
           pd['{}_avg'.format(rate)] += t['elapsed_time']
           pd['{}_fail'.format(rate)] += t['failure']
-      
-    print(prob_dic)
-  
-a = Analyzer(1)
-a.load_infomations()
+
+a = Analyzer(106)
+print(a.problem_dic)

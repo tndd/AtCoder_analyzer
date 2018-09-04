@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 import sqlite3
-import json
-import sys
 
 
 class DataOperator:
   # 番号のファイルで初期化される
-  def __init__(self, num):
+  def __init__(self):
     # 定数の設定
     self.__set_const()
-    # jsonファイルを読み込み
-    self.__src_dict = self.__load_json(num)
     # racelta.dbに接続
     self.__cursor_racerta = self.__connect_db()
     # テーブルの作成
@@ -50,17 +46,6 @@ class DataOperator:
     # 失敗数テーブル
     self.__create_fail_tbl()
     return self.__SUCCESS
-  
-  # jsonファイルの読み込み
-  def __load_json(self, num):
-    try:
-      with open('{}/{}.json'.format(self.__ABC_PATH, '%03d' % num), 'r', encoding='utf-8') as f:
-        json_dict = json.load(f)
-      return json_dict
-    # 存在しないファイルを選択した場合、プログラムを強制終了
-    except:
-      sys.stderr.write('jsonファイルの読み込みに失敗')
-      exit(self.__FAILED)
   
   # dbへの接続
   def __connect_db(self):
@@ -147,4 +132,4 @@ class DataOperator:
     return self.__SUCCESS
 
 
-a = DataOperator(106)
+a = DataOperator()
