@@ -10,24 +10,35 @@ class Analyzer:
     # 変数ファイルの設定
     self.__set_val(num)
     # 辞書に情報登録
-    self.reg_info2dict()
-
+    self.__reg_info2dict()
+  
   # 定数の設定
   def __set_const(self):
-    self.JSON_PATH = 'data/abc'
+    # jsonパス
+    self.__JSON_PATH = 'data/abc'
+    # 問題数
+    self.__PROBLEM_NUM = 4
+    # 色
+    self.COLORS = ('gray', 'brown', 'green', 'cyan', 'blue', 'yellow', 'orange', 'red')
+    ## ステータスコード
+    # 正常終了の時に返す値
+    self.__SUCCESS = 0
+    # 異常終了の時に返すコード
+    self.__FAILED = 1
+    return self.__SUCCESS
   
   # 変数の設定
   def __set_val(self, num):
     # ファイル辞書の読み込み
-    self.tgt_dict = self.file_loader(num)
+    self.tgt_dict = self.__file_loader(num)
     # 参加者数の合計辞書の読み込み
-    self.participants_dict = self.gen_participants_dict()
+    self.participants_dict = self.__gen_participants_dict()
     # 問題の項目ごとの合計辞書リスト
-    self.problem_dic = [self.gen_problem_dict() for _ in range(4)]
+    self.problem_dic = [self.__gen_problem_dict() for _ in range(self.__PROBLEM_NUM)]
   
   # 解析ファイルパスの生成
   def __get_path(self, num):
-    return '{}/{}.json'.format(self.JSON_PATH, '%03d' % num)
+    return '{}/{}.json'.format(self.__JSON_PATH, '%03d' % num)
   
   # ファイル読み込み
   def __load_json(self, fpath):
@@ -40,14 +51,15 @@ class Analyzer:
     return json_dict
   
   # jsonファイルを読み込むラッパーメソッド
-  def file_loader(self, num):
+  def __file_loader(self, num):
     fpath = self.__get_path(num)
     return self.__load_json(fpath)
   
   # レート毎参加者数の辞書
-  def gen_participants_dict(self):
+  def __gen_participants_dict(self):
     dic = {
       # 参加者数合計
+      'all': 0,
       'gray': 0,
       'brown': 0,
       'green': 0,
@@ -60,9 +72,10 @@ class Analyzer:
     return dic
   
   # 問題毎のAC数、回答合計時間、失敗数
-  def gen_problem_dict(self):
+  def __gen_problem_dict(self):
     problem_dict = {
       # AC数合計
+      'ac': 0,
       'gray_ac': 0,
       'brown_ac': 0,
       'green_ac': 0,
@@ -72,15 +85,17 @@ class Analyzer:
       'orange_ac': 0,
       'red_ac': 0,
       # 回答時間合計
-      'gray_avg': 0,
-      'brown_avg': 0,
-      'green_avg': 0,
-      'cyan_avg': 0,
-      'blue_avg': 0,
-      'yellow_avg': 0,
-      'orange_avg': 0,
-      'red_avg': 0,
+      'time': 0,
+      'gray_time': 0,
+      'brown_time': 0,
+      'green_time': 0,
+      'cyan_time': 0,
+      'blue_time': 0,
+      'yellow_time': 0,
+      'orange_time': 0,
+      'red_time': 0,
       # 失敗数合計
+      'fail': 0,
       'gray_fail': 0,
       'brown_fail': 0,
       'green_fail': 0,
@@ -93,7 +108,7 @@ class Analyzer:
     return problem_dict
   
   # レートを色に変換
-  def rate2color(self, dic):
+  def __rate2color(self, dic):
     rate = dic['rating']
     if rate < 400:
       return 'gray'
@@ -110,24 +125,54 @@ class Analyzer:
     elif rate < 2800:
       return 'orange'
     else:
+      print(rate)
       return 'red'
   
-  
   # 統計情報を辞書データ(参加者、問題)に登録
-  def reg_info2dict(self):
+  def __reg_info2dict(self):
     # 人数毎にループ
     for d in self.tgt_dict['data']:
       # レート色を算出
-      rate = self.rate2color(d)
+      rate = self.__rate2color(d)
       # 参加者集計
+      self.participants_dict['all'] += 1
       self.participants_dict[rate] += 1
       # 問題毎の情報集計
-      i = 0
       for t, pd in zip(d['tasks'], self.problem_dic):
         if 'elapsed_time' in t:
+          pd['ac'] += 1
+          pd['time'] += t['elapsed_time']
+          pd['fail'] += t['failure']
           pd['{}_ac'.format(rate)] += 1
-          pd['{}_avg'.format(rate)] += t['elapsed_time']
+          pd['{}_time'.format(rate)] += t['elapsed_time']
           pd['{}_fail'.format(rate)] += t['failure']
+    print(self.problem_dic)
+    print(self.participants_dict)
+    # 平均値を求める
+    self.calc_dic()
+    return self.__SUCCESS
 
-a = Analyzer(106)
-print(a.problem_dic)
+  # 辞書データの数値計算を行う
+  def calc_dic(self):
+    # 問題毎のループ
+    for pd in self.problem_dic:
+      if self.participants_dict['all'] != 0:
+        pd['ac'] = round(pd['ac'] / self.participants_dict['all'], 3)
+        pd['time'] = round(pd['time'] / self.participants_dict['all'])
+        pd['fail'] = round(pd['fail'] / self.participants_dict['all'], 2)
+      else:
+        return self.__FAILED
+      # 色ごとのループ
+      for rate in self.COLORS:
+        if self.participants_dict[rate] != 0:
+          pd['{}_ac'.format(rate)] = round(pd['{}_ac'.format(rate)] / self.participants_dict[rate], 3)
+          pd['{}_time'.format(rate)] = round(pd['{}_time'.format(rate)] / self.participants_dict[rate])
+          pd['{}_fail'.format(rate)] = round(pd['{}_fail'.format(rate)] / self.participants_dict[rate], 2)
+        else:
+          continue
+    return self.__SUCCESS
+
+if __name__ == '__main__':
+  a = Analyzer(107)
+  print(a.problem_dic)
+  print(a.participants_dict)

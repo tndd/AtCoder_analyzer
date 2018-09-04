@@ -55,7 +55,7 @@ class DataOperator:
   def __create_contest_tbl(self):
     sql_create_user_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
-        id int primary key,
+        id int primary key autoincrement,
         name text,
         a_id int,
         b_id int,
@@ -69,7 +69,7 @@ class DataOperator:
   def __create_problem_tbl(self):
     sql_create_problem_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
-        id int primary key,
+        id int primary key autoincrement,
         ac_id int,
         avg_id int,
         fail_id int
@@ -81,7 +81,7 @@ class DataOperator:
   def __create_ac_tbl(self):
     sql_create_ac_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
-        id int primary key,
+        id int primary key autoincrement,
         rate real,
         rate_gray real,
         rate_brown real,
@@ -99,7 +99,7 @@ class DataOperator:
   def __create_avg_tbl(self):
     sql_create_avg_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
-        id int primary key,
+        id int primary key autoincrement,
         time int,
         time_gray int,
         time_brown int,
@@ -117,19 +117,38 @@ class DataOperator:
   def __create_fail_tbl(self):
     sql_create_fail_tbl = """
       CREATE TABLE IF NOT EXISTS {}(
-        id int primary key,
-        fail int,
-        fail_gray int,
-        fail_brown int,
-        fail_green int,
-        fail_cyan int,
-        fail_blue int,
-        fail_yellow int,
-        fail_orange int,
-        fail_red int
+        id int primary key autoincrement,
+        fail real,
+        fail_gray real,
+        fail_brown real,
+        fail_green real,
+        fail_cyan real,
+        fail_blue real,
+        fail_yellow real,
+        fail_orange real,
+        fail_red real
       );""".format(self.__FAIL_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_fail_tbl)
     return self.__SUCCESS
+  
+  # ACテーブルに追加
+  def insert_ac_tbl(self, problem_dict):
+    sql_insert_ac_tbl = """
+      INSERT INTO {tbl_name} VALUES(
+        {v1},{v2},{v3},{v4},{v5},{v6},{v7},{v8},{v9}
+    );""".format(
+      tbl_name = self.__AC_TBL_NAME,
+      v1 = problem_dict['acRate'],
+      v2 = problem_dict['a']
+    )
+  # 辞書データをDBに登録
+  def reg_db(self, problem_dict):
+    # ACテーブル
+    # 回答時間テーブル
+    # 失敗数テーブル
+    # 問題テーブル
+    
+    pass
 
-
-a = DataOperator()
+if __name__ == '__main__':
+  a = DataOperator()
