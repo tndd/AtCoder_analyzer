@@ -175,4 +175,5 @@ if __name__ == '__main__':
   print(a.problem_dic)
   from DataOperator import DataOperator
   b = DataOperator()
-  b.reg_db(a.problem_dic)
+  # b.reg_db_part(a.problem_dic[0])
+  b.reg_db(a.problem_dic, 107)

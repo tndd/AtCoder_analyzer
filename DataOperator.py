@@ -50,9 +50,9 @@ class DataOperator:
   # dbへの接続
   def __connect_db(self):
     # コネクション確立
-    self.__conn = sqlite3.connect('{}/{}'.format(self.__DB_PATH, self.__DB_NAME))
+    self.__conn_racerta = sqlite3.connect('{}/{}'.format(self.__DB_PATH, self.__DB_NAME))
     # カーソル取得
-    self.__cursor_racerta = self.__conn.cursor()
+    self.__cursor_racerta = self.__conn_racerta.cursor()
     return self.__SUCCESS
   
   # 大会テーブルの作成
@@ -149,7 +149,8 @@ class DataOperator:
         {yellow},
         {orange},
         {red}
-      )""".format(
+      );
+    """.format(
       tbl_name=self.__AC_TBL_NAME,
       all=problem_dict['ac'],
       gray=problem_dict['gray_ac'],
@@ -179,17 +180,18 @@ class DataOperator:
         {yellow},
         {orange},
         {red}
-      );""".format(
-        tbl_name=self.__TIME_TBL_NAME,
-        all=problem_dict['time'],
-        gray=problem_dict['gray_time'],
-        brown=problem_dict['brown_time'],
-        green=problem_dict['green_time'],
-        cyan=problem_dict['cyan_time'],
-        blue=problem_dict['blue_time'],
-        yellow=problem_dict['yellow_time'],
-        orange=problem_dict['orange_time'],
-        red=problem_dict['red_time']
+      );
+    """.format(
+      tbl_name=self.__TIME_TBL_NAME,
+      all=problem_dict['time'],
+      gray=problem_dict['gray_time'],
+      brown=problem_dict['brown_time'],
+      green=problem_dict['green_time'],
+      cyan=problem_dict['cyan_time'],
+      blue=problem_dict['blue_time'],
+      yellow=problem_dict['yellow_time'],
+      orange=problem_dict['orange_time'],
+      red=problem_dict['red_time']
     )
     self.__cursor_racerta.execute(sql_insert_time_tbl)
     return self.__cursor_racerta.lastrowid
@@ -197,7 +199,7 @@ class DataOperator:
   # 回答時間テーブルにデータ挿入
   def insert_fail_tbl(self, problem_dict):
     sql_insert_fail_tbl = """
-      INSERT INTO {tbl_name} VALUES(
+      INSERT INTO {tbl} VALUES(
         null,
         {all},
         {gray},
@@ -208,8 +210,9 @@ class DataOperator:
         {yellow},
         {orange},
         {red}
-      );""".format(
-      tbl_name=self.__FAIL_TBL_NAME,
+      );
+    """.format(
+      tbl=self.__FAIL_TBL_NAME,
       all=problem_dict['fail'],
       gray=problem_dict['gray_fail'],
       brown=problem_dict['brown_fail'],
@@ -223,16 +226,65 @@ class DataOperator:
     self.__cursor_racerta.execute(sql_insert_fail_tbl)
     return self.__cursor_racerta.lastrowid
   
-  # 辞書データをDBに登録
-  def reg_db(self, problem_dict):
+  # 問題テーブルにデータ挿入
+  def insert_problem_tbl(self, ac_id, time_id, fail_id):
+    sql_insert_fail_tbl = """
+      INSERT INTO {tbl} VALUES(
+        null,
+        {ac_id},
+        {time_id},
+        {fail_id}
+      );
+    """.format(
+      tbl=self.__PROBLEM_TBL_NAME,
+      ac_id=ac_id,
+      time_id=time_id,
+      fail_id=fail_id
+    )
+    self.__cursor_racerta.execute(sql_insert_fail_tbl)
+    return self.__cursor_racerta.lastrowid
+  
+  # 辞書データをDBに登録(一部)
+  def reg_db_part(self, problem_dict_part):
     # ACテーブル
-    ac_id = self.insert_ac_tbl(problem_dict[0])
+    ac_id = self.insert_ac_tbl(problem_dict_part)
     # 回答時間テーブル
-    time_id = self.insert_time_tbl(problem_dict[0])
+    time_id = self.insert_time_tbl(problem_dict_part)
     # 失敗数テーブル
-    fail_id = self.insert_fail_tbl(problem_dict[0])
+    fail_id = self.insert_fail_tbl(problem_dict_part)
     # 問題テーブル
-    self.__conn.commit()
+    problem_id = self.insert_problem_tbl(ac_id, time_id, fail_id)
+    return problem_id
+  
+  # 辞書データ登録
+  def reg_db(self, problem_dict, num):
+    # 大会名
+    name = 'abc{}'.format('%03d' % num)
+    # 問題IDのリスト
+    prob_ids = [self.reg_db_part(d) for d in problem_dict]
+    # DB登録
+    sql_insert_contest = """
+      INSERT INTO {tbl} VALUES(
+        null,
+        '{name}',
+        {a_id},
+        {b_id},
+        {c_id},
+        {d_id}
+      );
+    """.format(
+      tbl=self.__CONTEST_TBL_NAME,
+      name=name,
+      a_id=prob_ids[0],
+      b_id=prob_ids[1],
+      c_id=prob_ids[2],
+      d_id=prob_ids[3]
+    )
+    # insert実行
+    self.__cursor_racerta.execute(sql_insert_contest)
+    # コミット
+    self.__conn_racerta.commit()
+    return self.__SUCCESS
 
 
 if __name__ == '__main__':
