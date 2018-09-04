@@ -146,8 +146,6 @@ class Analyzer:
           pd['{}_ac'.format(rate)] += 1
           pd['{}_time'.format(rate)] += t['elapsed_time']
           pd['{}_fail'.format(rate)] += t['failure']
-    print(self.problem_dic)
-    print(self.participants_dict)
     # 平均値を求める
     self.calc_dic()
     return self.__SUCCESS
@@ -175,4 +173,6 @@ class Analyzer:
 if __name__ == '__main__':
   a = Analyzer(107)
   print(a.problem_dic)
-  print(a.participants_dict)
+  from DataOperator import DataOperator
+  b = DataOperator()
+  b.reg_db(a.problem_dic)
