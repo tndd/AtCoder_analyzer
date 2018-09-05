@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import sys
-
+from Const import Const as CST
 
 class Analyzer:
   def __init__(self, num):
@@ -20,12 +20,7 @@ class Analyzer:
     self.__PROBLEM_NUM = 4
     # 色
     self.COLORS = ('gray', 'brown', 'green', 'cyan', 'blue', 'yellow', 'orange', 'red')
-    ## ステータスコード
-    # 正常終了の時に返す値
-    self.__SUCCESS = 0
-    # 異常終了の時に返すコード
-    self.__FAILED = 1
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # 変数の設定
   def __set_val(self, num):
@@ -45,10 +40,10 @@ class Analyzer:
     try:
       with open(fpath, 'r', encoding='utf-8') as f:
         json_dict = json.load(f)
+        return json_dict
     except:
       sys.stderr.write('[不正なファイル番号]: ファイル読み込みに失敗')
       exit(1)
-    return json_dict
   
   # jsonファイルを読み込むラッパーメソッド
   def __file_loader(self, num):
@@ -150,7 +145,7 @@ class Analyzer:
           pd['{}_fail'.format(rate)] += t['failure']
     # 平均値を求める
     self.calc_dic()
-    return self.__SUCCESS
+    return CST.SUCCESS
 
   # 辞書データの数値計算を行う
   def calc_dic(self):
@@ -161,7 +156,7 @@ class Analyzer:
         pd['time'] = round(pd['time'] / self.participants_dict['all'])
         pd['fail'] = round(pd['fail'] / self.participants_dict['all'], 2)
       else:
-        return self.__FAILED
+        return CST.FAILED
       # 色ごとのループ
       for rate in self.COLORS:
         if self.participants_dict[rate] != 0:
@@ -170,7 +165,7 @@ class Analyzer:
           pd['{}_fail'.format(rate)] = round(pd['{}_fail'.format(rate)] / self.participants_dict[rate], 2)
         else:
           continue
-    return self.__SUCCESS
+    return CST.SUCCESS
 
 if __name__ == '__main__':
   from DataOperator import DataOperator
