@@ -74,6 +74,8 @@ class Analyzer:
   # 問題毎のAC数、回答合計時間、失敗数
   def __gen_problem_dict(self):
     problem_dict = {
+      # 問題ID
+      'id': 0,
       # AC数合計
       'ac': 0,
       'gray_ac': 0,
@@ -138,6 +140,7 @@ class Analyzer:
       self.participants_dict[rate] += 1
       # 問題毎の情報集計
       for t, pd in zip(d['tasks'], self.problem_dic):
+        pd['id'] = t['task_id']
         if 'elapsed_time' in t:
           pd['ac'] += 1
           pd['time'] += t['elapsed_time']
@@ -172,7 +175,9 @@ class Analyzer:
 if __name__ == '__main__':
   from DataOperator import DataOperator
   b = DataOperator()
-  for n in range(1,108):
-    a = Analyzer(n)
-    b.reg_db(a.problem_dic, n)
-    print(n)
+  a = Analyzer(5)
+  print(a.problem_dic)
+  # for n in range(1,108):
+  #   a = Analyzer(n)
+  #   b.reg_db(a.problem_dic, n)
+  #   print(n)
