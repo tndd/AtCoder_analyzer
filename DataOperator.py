@@ -22,7 +22,6 @@ class DataOperator:
     self.__DB_NAME = 'lacerta.db'
     # テーブル名定義
     self.__CONTEST_TBL_NAME = 'contest'
-    self.__PROBLEM_TBL_NAME = 'problem'
     self.__AC_TBL_NAME = 'ac'
     self.__TIME_TBL_NAME = 'time'
     self.__FAIL_TBL_NAME = 'fail'
@@ -37,8 +36,6 @@ class DataOperator:
   def __create_tbls(self):
     # 大会テーブル
     self.__create_contest_tbl()
-    # 問題テーブル
-    self.__create_problem_tbl()
     # ac率テーブル
     self.__create_ac_tbl()
     # 平均回答時間テーブル
@@ -67,18 +64,6 @@ class DataOperator:
         d_id integer
       );""".format(self.__CONTEST_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_user_tbl)
-    return self.__SUCCESS
-  
-  # 問題テーブルの作成
-  def __create_problem_tbl(self):
-    sql_create_problem_tbl = """
-      CREATE TABLE IF NOT EXISTS {}(
-        id integer primary key autoincrement,
-        ac_id integer,
-        avg_id integer,
-        fail_id integer
-      );""".format(self.__PROBLEM_TBL_NAME)
-    self.__cursor_racerta.execute(sql_create_problem_tbl)
     return self.__SUCCESS
   
   # ac率テーブルの作成
@@ -139,7 +124,7 @@ class DataOperator:
   def insert_ac_tbl(self, problem_dict):
     sql_insert_ac_tbl = """
       INSERT INTO {tbl_name} VALUES(
-        null,
+        {id},
         {all},
         {gray},
         {brown},
@@ -151,6 +136,7 @@ class DataOperator:
         {red}
       );
     """.format(
+      id=problem_dict['id'],
       tbl_name=self.__AC_TBL_NAME,
       all=problem_dict['ac'],
       gray=problem_dict['gray_ac'],
@@ -170,7 +156,7 @@ class DataOperator:
   def insert_time_tbl(self, problem_dict):
     sql_insert_time_tbl = """
       INSERT INTO {tbl_name} VALUES(
-        null,
+        {id},
         {all},
         {gray},
         {brown},
@@ -182,6 +168,7 @@ class DataOperator:
         {red}
       );
     """.format(
+      id=problem_dict['id'],
       tbl_name=self.__TIME_TBL_NAME,
       all=problem_dict['time'],
       gray=problem_dict['gray_time'],
@@ -200,7 +187,7 @@ class DataOperator:
   def insert_fail_tbl(self, problem_dict):
     sql_insert_fail_tbl = """
       INSERT INTO {tbl} VALUES(
-        null,
+        {id},
         {all},
         {gray},
         {brown},
@@ -212,6 +199,7 @@ class DataOperator:
         {red}
       );
     """.format(
+      id=problem_dict['id'],
       tbl=self.__FAIL_TBL_NAME,
       all=problem_dict['fail'],
       gray=problem_dict['gray_fail'],
@@ -226,43 +214,23 @@ class DataOperator:
     self.__cursor_racerta.execute(sql_insert_fail_tbl)
     return self.__cursor_racerta.lastrowid
   
-  # 問題テーブルにデータ挿入
-  def insert_problem_tbl(self, ac_id, time_id, fail_id):
-    sql_insert_fail_tbl = """
-      INSERT INTO {tbl} VALUES(
-        null,
-        {ac_id},
-        {time_id},
-        {fail_id}
-      );
-    """.format(
-      tbl=self.__PROBLEM_TBL_NAME,
-      ac_id=ac_id,
-      time_id=time_id,
-      fail_id=fail_id
-    )
-    self.__cursor_racerta.execute(sql_insert_fail_tbl)
-    return self.__cursor_racerta.lastrowid
-  
   # 辞書データをDBに登録(一部)
   def reg_db_part(self, problem_dict_part):
     # ACテーブル
-    ac_id = self.insert_ac_tbl(problem_dict_part)
+    self.insert_ac_tbl(problem_dict_part)
     # 回答時間テーブル
-    time_id = self.insert_time_tbl(problem_dict_part)
+    self.insert_time_tbl(problem_dict_part)
     # 失敗数テーブル
-    fail_id = self.insert_fail_tbl(problem_dict_part)
-    # 問題テーブル
-    problem_id = self.insert_problem_tbl(ac_id, time_id, fail_id)
-    return problem_id
+    self.insert_fail_tbl(problem_dict_part)
+    return problem_dict_part['id']
   
   # 辞書データ登録
   def reg_db(self, problem_dict, num):
     # 大会名
     name = 'abc{}'.format('%03d' % num)
-    # 問題IDのリスト
+    # 辞書データを登録しつつ問題IDのリスト取得
     prob_ids = [self.reg_db_part(d) for d in problem_dict]
-    # DB登録
+    # DB登録SQL
     sql_insert_contest = """
       INSERT INTO {tbl} VALUES(
         null,

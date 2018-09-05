@@ -175,9 +175,9 @@ class Analyzer:
 if __name__ == '__main__':
   from DataOperator import DataOperator
   b = DataOperator()
-  a = Analyzer(5)
-  print(a.problem_dic)
-  # for n in range(1,108):
-  #   a = Analyzer(n)
-  #   b.reg_db(a.problem_dic, n)
-  #   print(n)
+  # a = Analyzer(5)
+  # print(a.problem_dic)
+  for n in range(1,108):
+    a = Analyzer(n)
+    b.reg_db(a.problem_dic, n)
+    print(n)
