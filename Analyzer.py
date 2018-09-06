@@ -144,11 +144,11 @@ class Analyzer:
           pd['{}_time'.format(rate)] += t['elapsed_time']
           pd['{}_fail'.format(rate)] += t['failure']
     # 平均値を求める
-    self.calc_dic()
+    self.__calc_dic()
     return CST.SUCCESS
 
   # 辞書データの数値計算を行う
-  def calc_dic(self):
+  def __calc_dic(self):
     # 問題毎のループ
     for pd in self.problem_dic:
       if self.participants_dict['all'] != 0:
