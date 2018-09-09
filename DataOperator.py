@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import sqlite3
+import numpy as np
+from Const import Const as CST
 
 
 class DataOperator:
@@ -25,12 +27,7 @@ class DataOperator:
     self.__AC_TBL_NAME = 'ac'
     self.__TIME_TBL_NAME = 'time'
     self.__FAIL_TBL_NAME = 'fail'
-    ## ステータスコード
-    # 正常終了の時に返す値
-    self.__SUCCESS = 0
-    # 異常終了の時に返すコード
-    self.__FAILED = 1
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # テーブルの作成
   def __create_tbls(self):
@@ -42,7 +39,7 @@ class DataOperator:
     self.__create_time_tbl()
     # 失敗数テーブル
     self.__create_fail_tbl()
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # dbへの接続
   def __connect_db(self):
@@ -50,7 +47,7 @@ class DataOperator:
     self.__conn_racerta = sqlite3.connect('{}/{}'.format(self.__DB_PATH, self.__DB_NAME))
     # カーソル取得
     self.__cursor_racerta = self.__conn_racerta.cursor()
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # 大会テーブルの作成
   def __create_contest_tbl(self):
@@ -64,7 +61,7 @@ class DataOperator:
         d_id integer
       );""".format(self.__CONTEST_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_user_tbl)
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # ac率テーブルの作成
   def __create_ac_tbl(self):
@@ -79,10 +76,11 @@ class DataOperator:
         rate_blue real,
         rate_yellow real,
         rate_orange real,
-        rate_red real
+        rate_red real,
+        deviation real
       );""".format(self.__AC_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_ac_tbl)
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # 平均回答時間テーブルの作成
   def __create_time_tbl(self):
@@ -100,7 +98,7 @@ class DataOperator:
         time_red integer
       );""".format(self.__TIME_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_time_tbl)
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # 平均失敗数テーブルの作成
   def __create_fail_tbl(self):
@@ -118,7 +116,7 @@ class DataOperator:
         fail_red real
       );""".format(self.__FAIL_TBL_NAME)
     self.__cursor_racerta.execute(sql_create_fail_tbl)
-    return self.__SUCCESS
+    return CST.SUCCESS
   
   # ACテーブルにデータ挿入(戻り値は格納したID)
   def insert_ac_tbl(self, problem_dict):
@@ -133,7 +131,8 @@ class DataOperator:
         {blue},
         {yellow},
         {orange},
-        {red}
+        {red},
+        {deviation}
       );
     """.format(
       id=problem_dict['id'],
@@ -146,7 +145,8 @@ class DataOperator:
       blue=problem_dict['blue_ac'],
       yellow=problem_dict['yellow_ac'],
       orange=problem_dict['orange_ac'],
-      red=problem_dict['red_ac']
+      red=problem_dict['red_ac'],
+      deviation=0
     )
     self.__cursor_racerta.execute(sql_insert_ac_tbl)
     
@@ -252,8 +252,45 @@ class DataOperator:
     self.__cursor_racerta.execute(sql_insert_contest)
     # コミット
     self.__conn_racerta.commit()
-    return self.__SUCCESS
+    return CST.SUCCESS
 
-
+  # 偏差値更新用sql文の生成
+  def __gen_upd_ac_dev_sql(self, rate, deviation):
+    sql_upd_ac_dev = """
+      UPDATE {tbl}
+      SET
+        deviation = {deviation}
+      WHERE
+        rate = {rate}
+      ;
+      """.format(
+      tbl=self.__AC_TBL_NAME,
+      deviation=deviation,
+      rate=rate
+    )
+    return sql_upd_ac_dev
+  
+  # 問題の難易度偏差値の計算
+  def calc_deviation(self):
+    # ac率リストの取得
+    sql_calc_deviation = 'SELECT rate from {tbl}'.format(tbl=self.__AC_TBL_NAME)
+    self.__cursor_racerta.execute(sql_calc_deviation)
+    rates = [x[0] for x in self.__cursor_racerta]
+    # 平均値、標準偏差の計算
+    avg_ = np.mean(rates)
+    std_ = np.std(rates)
+    # ACテーブルの偏差値の更新
+    for rate in rates:
+      # 偏差値計算
+      deviation = round(10 * ((rate - avg_) / std_) + 50, 2)
+      # 偏差値の更新
+      upd_ac_dev_sql = self.__gen_upd_ac_dev_sql(rate, deviation)
+      self.__cursor_racerta.execute(upd_ac_dev_sql)
+    # コミット
+    self.__conn_racerta.commit()
+    return CST.SUCCESS
+  
+    
 if __name__ == '__main__':
   a = DataOperator()
+  a.calc_deviation()
