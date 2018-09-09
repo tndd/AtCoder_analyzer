@@ -275,14 +275,16 @@ class DataOperator:
     # ac率リストの取得
     sql_calc_deviation = 'SELECT rate from {tbl}'.format(tbl=self.__AC_TBL_NAME)
     self.__cursor_racerta.execute(sql_calc_deviation)
+    # レート一覧リスト
     rates = [x[0] for x in self.__cursor_racerta]
+    scores = [(1 - x) * 100 for x in rates]
     # 平均値、標準偏差の計算
-    avg_ = np.mean(rates)
-    std_ = np.std(rates)
+    avg_ = np.mean(scores)
+    std_ = np.std(scores)
     # ACテーブルの偏差値の更新
-    for rate in rates:
+    for (rate, score) in zip(rates, scores):
       # 偏差値計算
-      deviation = round(10 * ((rate - avg_) / std_) + 50, 2)
+      deviation = round(10 * ((score - avg_) / std_) + 50, 2)
       # 偏差値の更新
       upd_ac_dev_sql = self.__gen_upd_ac_dev_sql(rate, deviation)
       self.__cursor_racerta.execute(upd_ac_dev_sql)
