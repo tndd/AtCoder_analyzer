@@ -169,10 +169,10 @@ class Analyzer:
 
 if __name__ == '__main__':
   from DataOperator import DataOperator
-  b = DataOperator()
-  # a = Analyzer(5)
-  # print(a.problem_dic)
+  dao = DataOperator()
+  # db登録
   for n in range(1,108):
     a = Analyzer(n)
-    b.reg_db(a.problem_dic, n)
-    print(n)
+    dao.reg_db(a.problem_dic, n)
+  # 偏差値登録
+  dao.calc_deviation()

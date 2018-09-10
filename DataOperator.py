@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import numpy as np
+from logging import getLogger
 from Const import Const as CST
 
 
 class DataOperator:
   # 番号のファイルで初期化される
   def __init__(self):
+    # loggerの設定
+    self.logger = getLogger(__name__)
     # 定数の設定
     self.__set_const()
     # racelta.dbに接続
@@ -119,9 +122,9 @@ class DataOperator:
     return CST.SUCCESS
   
   # ACテーブルにデータ挿入(戻り値は格納したID)
-  def insert_ac_tbl(self, problem_dict):
+  def __insert_ac_tbl(self, problem_dict):
     sql_insert_ac_tbl = """
-      INSERT INTO {tbl_name} VALUES(
+      REPLACE INTO {tbl_name} VALUES(
         {id},
         {all},
         {gray},
@@ -153,9 +156,9 @@ class DataOperator:
     return self.__cursor_racerta.lastrowid
   
   # 回答時間テーブルにデータ挿入
-  def insert_time_tbl(self, problem_dict):
+  def __insert_time_tbl(self, problem_dict):
     sql_insert_time_tbl = """
-      INSERT INTO {tbl_name} VALUES(
+      REPLACE INTO {tbl_name} VALUES(
         {id},
         {all},
         {gray},
@@ -184,9 +187,9 @@ class DataOperator:
     return self.__cursor_racerta.lastrowid
   
   # 回答時間テーブルにデータ挿入
-  def insert_fail_tbl(self, problem_dict):
+  def __insert_fail_tbl(self, problem_dict):
     sql_insert_fail_tbl = """
-      INSERT INTO {tbl} VALUES(
+      REPLACE INTO {tbl} VALUES(
         {id},
         {all},
         {gray},
@@ -215,21 +218,22 @@ class DataOperator:
     return self.__cursor_racerta.lastrowid
   
   # 辞書データをDBに登録(一部)
-  def reg_db_part(self, problem_dict_part):
+  def __reg_db_part(self, problem_dict_part):
     # ACテーブル
-    self.insert_ac_tbl(problem_dict_part)
+    self.__insert_ac_tbl(problem_dict_part)
     # 回答時間テーブル
-    self.insert_time_tbl(problem_dict_part)
+    self.__insert_time_tbl(problem_dict_part)
     # 失敗数テーブル
-    self.insert_fail_tbl(problem_dict_part)
+    self.__insert_fail_tbl(problem_dict_part)
     return problem_dict_part['id']
+  
   
   # 辞書データ登録
   def reg_db(self, problem_dict, num):
     # 大会名
     name = 'abc{}'.format('%03d' % num)
     # 辞書データを登録しつつ問題IDのリスト取得
-    prob_ids = [self.reg_db_part(d) for d in problem_dict]
+    prob_ids = [self.__reg_db_part(d) for d in problem_dict]
     # DB登録SQL
     sql_insert_contest = """
       INSERT INTO {tbl} VALUES(
@@ -252,6 +256,7 @@ class DataOperator:
     self.__cursor_racerta.execute(sql_insert_contest)
     # コミット
     self.__conn_racerta.commit()
+    self.logger.info('{} is commited'.format('%03d' % num))
     return CST.SUCCESS
 
   # 偏差値更新用sql文の生成
